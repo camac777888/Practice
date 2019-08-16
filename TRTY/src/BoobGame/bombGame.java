@@ -6,6 +6,7 @@ import java.awt.Font;
 import java.awt.GridLayout;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.util.HashSet;
 import java.util.Timer;
 import java.util.TimerTask;
 import javax.swing.JButton;
@@ -94,15 +95,23 @@ public class bombGame extends JFrame implements MouseListener {
 	}
 	
 	private void SetRandomBomb() {
-		int count = 0;
-		while (count!=BombNumber) {
+		
+		HashSet<int[][]> hs = new HashSet<int[][]>();
+		while (hs.size()!=10) {
+			
 			int tx = (int)(Math.random()*10) ; //X~Y的範圍
 			int ty = (int)(Math.random()*10) ; //Math.random() * (Y-X+1) + X
 			System.out.println(tx+" "+ty);
-			if (MiddleButton[tx][ty] == 0) MiddleButton[tx][ty] = 1;	
-			count ++;
+			int [][] tem =  {{tx,ty}};
+			
+			if (MiddleButton[tx][ty] == 0) {
+				MiddleButton[tx][ty] = 1;	
+				hs.add(tem);
+			}
 		}
-	}
+		
+		}
+	
 
 	private void GetAroundBombNumber() {
 		for(int i=0;i<MapRow;i++){
@@ -136,7 +145,7 @@ public class bombGame extends JFrame implements MouseListener {
 			}
 		}
 		BombNumber=10;
-		 ShowBombNumber.setText("目前炸彈數："+BombNumber); 
+		ShowBombNumber.setText("目前炸彈數："+BombNumber); 
 		SetRandomBomb();
 		GetAroundBombNumber();
 	}
@@ -189,23 +198,28 @@ public class bombGame extends JFrame implements MouseListener {
 			 
 		 }
 	private void Returnflag(int x, int y ) {
+		if (flag[x][y]) {
 		 BombNumber++;
 		 ShowBombNumber.setText("目前炸彈數："+BombNumber);
-		 flag[x][y]=false;
+		 flag[x][y]=false;}
 	}
-	private void JudgeGame() {
+	private void JudgeGame() { 
 		if (BombNumber==0) {
 			 int count = 0;
+			 int  MiddleButtonIsPressCount = 0;
 			 for(int i=0;i<MapRow;i++){
 					for(int j=0;j<MapCol;j++){
 						if (MiddleButton[i][j]==1&&flag[i][j]) {
-							count++;
-						}
+							count++;}
+							if (MiddleButtonIsPress[i][j]) {
+								MiddleButtonIsPressCount++;
+							}
+						
 					}	
 					}
-			 if  (count==10) {
+			 if  (count==10&&MiddleButtonIsPressCount==90) {
 				 GameTimeSwitch=0;
-				 JOptionPane.showMessageDialog(null, "Winner"); 
+				 JOptionPane.showMessageDialog(null, "You R a Handsome Boy!!"); 
 				 ReStartGame();
 			 }
 					
