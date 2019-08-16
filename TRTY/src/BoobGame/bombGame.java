@@ -32,7 +32,7 @@ public class bombGame extends JFrame implements MouseListener {
 	private boolean MiddleButtonIsPress[][] = new boolean [MapRow][MapCol];
 	private int MiddleButtonAroundBomb[][] = new int [MapRow][MapCol];
 	private int direct [][] = {{-1,-1},{-1,0},{-1,1},{0,-1},{0,1},{1,-1},{1,0},{1,1}};//周圍八格
-	
+	private boolean flag[][] = new boolean [MapRow][MapCol];
 	public static void main(String args[]){
 		new bombGame();
 	}
@@ -103,41 +103,7 @@ public class bombGame extends JFrame implements MouseListener {
 			count ++;
 		}
 	}
-	
-	private void ReStartGame() {
-		GameTimeSwitch = 1;
-		GameTimeWalking= 0;
-		for(int i=0;i<MapRow;i++){
-			for(int j=0;j<MapCol;j++){
-				MidButton[i][j].setBackground(Color.black);
-				MidButton[i][j].setText("");
-				MiddleButton[i][j]= 0;
-				MiddleButtonIsPress[i][j] = false;
-				MiddleButtonAroundBomb[i][j] = 0;
-			}
-		}
-		SetRandomBomb();
-		GetAroundBombNumber();
-		
-	}
-	private void GameOver() {
-		GameTimeSwitch=0;
-		
-		for(int i=0;i<MapRow;i++){
-			for(int j=0;j<MapCol;j++){
-				if (MiddleButton[i][j]==1) {
-					MidButton[i][j].setText("*");
-					MidButton[i][j].setBackground(Color.RED);
-					
-				}
-			
-			}	
-			}
-		 JOptionPane.showMessageDialog(null, "GameOver"); 
-		 ReStartGame();
-	}
-	
-	
+
 	private void GetAroundBombNumber() {
 		for(int i=0;i<MapRow;i++){
 			for(int j=0;j<MapCol;j++){
@@ -156,8 +122,101 @@ public class bombGame extends JFrame implements MouseListener {
 	}
 	}
 	
+	
+	private void ReStartGame() {
+		GameTimeSwitch = 1;
+		GameTimeWalking= 0;
+		for(int i=0;i<MapRow;i++){
+			for(int j=0;j<MapCol;j++){
+				MidButton[i][j].setBackground(Color.black);
+				MidButton[i][j].setText("");
+				MiddleButton[i][j]= 0;
+				MiddleButtonIsPress[i][j] = false;
+				MiddleButtonAroundBomb[i][j] = 0;
+			}
+		}
+		BombNumber=10;
+		 ShowBombNumber.setText("目前炸彈數："+BombNumber); 
+		SetRandomBomb();
+		GetAroundBombNumber();
+	}
+	
+	private void GameOver() {
+		GameTimeSwitch=0;
+		
+		for(int i=0;i<MapRow;i++){
+			for(int j=0;j<MapCol;j++){
+				if (MiddleButton[i][j]==1) {
+					MidButton[i][j].setText("*");
+					MidButton[i][j].setBackground(Color.RED);
+				}
+			}	
+			}
+		 JOptionPane.showMessageDialog(null, "GameOver"); 
+		 ReStartGame();
+	}
+	
+	private void Spread(int x ,int y) {
+		 int ArrayX[] = new int [MapRow*MapCol]; 
+		 int ArrayY[] = new int [MapRow*MapCol]; 
+		 int a=0,b=0;
+		 ArrayX[a] = x;
+		 ArrayY[a] = y;
+		 a++;
+		 
+		 while (a>b) {
+			int tex	= ArrayX[b]  ;
+			int tey = ArrayY[b]  ;
+			if (MiddleButtonAroundBomb[tex][tey] == 0)
+						for(int k=0;k<8;k++){
+							int tx = direct[k][0]+tex;
+							int ty = direct[k][1]+tey;
+							if (InRange(tx,ty)&& !MiddleButtonIsPress[tx][ty]) {
+								MiddleButtonIsPress[tx][ty] = true;
+								ArrayX[a] =tx;
+								ArrayY[a] =ty;
+								a++;
+								}
+							}
+							b++;
+								}
+			 for (int d=0;d<a;d++) {
+				 MidButton[ArrayX[d]][ArrayY[d]].setBackground(Color.white);
+				 if (MiddleButtonAroundBomb[ArrayX[d]][ArrayY[d]] > 0) {
+					 MidButton[ArrayX[d]][ArrayY[d]].setText(Integer.toString(MiddleButtonAroundBomb[ArrayX[d]][ArrayY[d]]));
+				 }
+			 }
+			 
+		 }
+	private void Returnflag(int x, int y ) {
+		 BombNumber++;
+		 ShowBombNumber.setText("目前炸彈數："+BombNumber);
+		 flag[x][y]=false;
+	}
+	private void JudgeGame() {
+		if (BombNumber==0) {
+			 int count = 0;
+			 for(int i=0;i<MapRow;i++){
+					for(int j=0;j<MapCol;j++){
+						if (MiddleButton[i][j]==1&&flag[i][j]) {
+							count++;
+						}
+					}	
+					}
+			 if  (count==10) {
+				 GameTimeSwitch=0;
+				 JOptionPane.showMessageDialog(null, "Winner"); 
+				 ReStartGame();
+			 }
+					
+			 
+		 }
+		
+	}
+	
+	
 	private boolean InRange(int x ,int y) {
-		return (x>0 && x<MapRow && y>0 && y<MapCol);
+		return (x>=0 && x<MapRow && y>=0 && y<MapCol);
 	}
 	
 	@Override
@@ -167,6 +226,47 @@ public class bombGame extends JFrame implements MouseListener {
 			 ReStartGame();
 		 } else if (command[0]=="S") {
 			 GameOver();
+		 }
+		 else {
+		 int x=Integer.parseInt(command[0]);
+		 int y=Integer.parseInt(command[1]);
+		 
+		 if(e.getButton()==MouseEvent.BUTTON1){ //左鍵
+			 if (MiddleButton[x][y]==1&& !MiddleButtonIsPress[x][y]) { //炸彈
+				 GameOver();
+			 } else if (MiddleButtonAroundBomb[x][y]==0&& !MiddleButtonIsPress[x][y]) { //周圍無炸彈
+				 Spread(x,y) ;
+				 if (flag[x][y]) {
+					 Returnflag(x,y);
+				 }
+			 } else if (MiddleButtonAroundBomb[x][y]>0&& !MiddleButtonIsPress[x][y]) { //周圍有炸彈
+				 MidButton[x][y].setBackground(Color.white);
+				 MidButton[x][y].setText(Integer.toString(MiddleButtonAroundBomb[x][y]));
+				 MiddleButtonIsPress[x][y] = true;
+				 if (flag[x][y]) {
+					 Returnflag(x,y);
+				 }
+			 }
+			 JudgeGame();
+		 } else if (e.getButton()==MouseEvent.BUTTON3){ //右鍵
+			 if (!MiddleButtonIsPress[x][y]) {
+				 if (!flag[x][y]) {
+					 if(BombNumber>0) {
+					 MidButton[x][y].setBackground(Color.GREEN);
+					 BombNumber--;
+					 ShowBombNumber.setText("目前炸彈數："+BombNumber); 
+					 flag[x][y]=true;}
+					 	else {
+					 	JOptionPane.showMessageDialog(null, "你只有10個拆炸包"); }
+					 JudgeGame();
+				 }else if (flag[x][y]) {
+					 MidButton[x][y].setBackground(Color.black);
+					 Returnflag(x,y);
+					 
+				 }
+			 }
+		 }
+			 
 		 }
 	}
 
